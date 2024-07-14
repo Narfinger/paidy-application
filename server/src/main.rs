@@ -10,10 +10,6 @@ use types::{new_app_state, AppState, MenuItem};
 mod tests;
 mod types;
 
-// we validate against this secret key. Not perfect security but better than nothing.
-static SECRET_KEY: &str =
-    "QXlj0uzlyckcmhVvvRHfSKzXZZE0K/k7+dyQx2k5Le2HwTdpInoh3VtDiLEV4eJLTX3aUcG+7mVO";
-
 async fn get_items(
     Path(table_id): Path<usize>,
     State(state): State<AppState>,
