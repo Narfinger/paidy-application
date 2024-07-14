@@ -1,9 +1,10 @@
 use std::sync::Arc;
 
 use rand::Rng;
+use serde::{Deserialize, Serialize};
 use tokio::sync::RwLock;
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub(crate) struct MenuItem {
     item: u64,
     duration_in_minutes: u64,
