@@ -41,8 +41,7 @@ fn router() -> Router {
     let state: AppState = new_app_state();
 
     Router::new()
-        .route("/:table_id/", get(get_items))
-        .route("/:table_id/", post(add_item_to_table))
+        .route("/:table_id/", get(get_items).post(add_item_to_table))
         .route("/:table_id/:item_id/", delete(delete_item))
         .with_state(state)
 }
