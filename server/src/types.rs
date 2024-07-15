@@ -19,7 +19,7 @@ pub(crate) struct MenuItem {
 }
 
 impl MenuItem {
-    fn new(item_number: u64) -> Self {
+    pub(crate) fn new(item_number: u64) -> Self {
         let mut rng = rand::thread_rng();
         let val = rng.gen_range(5..16);
         Self {
@@ -32,7 +32,7 @@ impl MenuItem {
 #[derive(Debug)]
 /// A table in the restaurant having various menuitems
 pub(crate) struct Table {
-    items: Vec<MenuItem>,
+    pub(crate) items: Vec<MenuItem>,
 }
 
 /// The whole state of the app is a vector of tables.
