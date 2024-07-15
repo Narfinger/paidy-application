@@ -24,14 +24,19 @@ async fn get_items_for_table(
     if query.key != API_KEY {
         Err(StatusCode::UNAUTHORIZED)
     } else {
-        let json_string = if let Some(table_lock) = state.get(table_number) {
-            let table_items = &table_lock.read().await.items;
-            serde_json::to_string(table_items)
+        if let Some(table_lock) = state.get(table_number).map(|table| table.read()) {
+            let table_lock = table_lock.await;
+            let limit = query.limit.unwrap_or(table_lock.items.len() as u64);
+            let new_items = table_lock
+                .items
+                .iter()
+                .take(limit as usize)
+                .collect::<Vec<&MenuItem>>();
+            serde_json::to_string(&new_items)
         } else {
-            serde_json::to_string::<Vec<MenuItem>>(&vec![])
+            serde_json::to_string::<Vec<u64>>(&vec![])
         }
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-        Ok(json_string)
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)
     }
 }
 
