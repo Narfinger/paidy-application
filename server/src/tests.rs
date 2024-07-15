@@ -32,11 +32,13 @@ mod tests {
             .json()
     }
 
+    /// helper function that starts the testserver
     async fn setup_server() -> Result<TestServer, anyhow::Error> {
         TestServer::new(router())
     }
 
     #[tokio::test]
+    /// testing if we can get simple get requests
     async fn simple_insert_test() {
         let server = setup_server().await.unwrap();
         let response = server.get("/1/").add_query_param("key", API_KEY).await;
@@ -44,6 +46,7 @@ mod tests {
     }
 
     #[tokio::test]
+    /// testing simple delete requests
     async fn simple_delete_test() {
         let server = setup_server().await.unwrap();
 
@@ -55,6 +58,7 @@ mod tests {
     }
 
     #[tokio::test]
+    /// testing simple post requests
     async fn simple_post_test() {
         let server = setup_server().await.unwrap();
         let insert_response = add_items(&server, 1, vec![1, 2, 3, 4]).await;
@@ -62,6 +66,7 @@ mod tests {
     }
 
     #[tokio::test]
+    /// testing if items we add via the api will exist when queried
     async fn items_added_exists() {
         let server = setup_server().await.unwrap();
         let insert1 = add_items(&server, 1, vec![1, 2, 3]).await;
@@ -79,6 +84,7 @@ mod tests {
     }
 
     #[tokio::test]
+    /// testing if inserted items via the api can get deleted
     async fn deletion_works() {
         let server = setup_server().await.unwrap();
         let insert1 = add_items(&server, 1, vec![1, 2, 3]).await;
@@ -101,6 +107,7 @@ mod tests {
     }
 
     #[tokio::test]
+    /// making sure that we delete via the item position and not the name of the item
     async fn deletion_works_by_item_position() {
         let server = setup_server().await.unwrap();
         let insert1 = add_items(&server, 1, vec![10, 20, 30]).await;
@@ -123,6 +130,7 @@ mod tests {
     }
 
     #[tokio::test]
+    /// testing that deletion does not delete items on other tables
     async fn deletion_does_not_disturb_other() {
         let server = setup_server().await.unwrap();
         let insert1 = add_items(&server, 1, vec![10, 20, 30]).await;
@@ -145,6 +153,7 @@ mod tests {
     }
 
     #[tokio::test]
+    /// can we get a specific item from a specific table
     async fn get_specific_item() {
         let server = setup_server().await.unwrap();
         let insert1 = add_items(&server, 1, vec![10, 20, 30]).await;
@@ -157,6 +166,7 @@ mod tests {
     }
 
     #[tokio::test]
+    /// test if we reject with no key parameter supplied
     async fn test_unauthorized_no_query_param() {
         let server = setup_server().await.unwrap();
         let get = server.get("/1/").await;
@@ -169,6 +179,7 @@ mod tests {
     }
 
     #[tokio::test]
+    /// test if we reject with the wrong key parameter supplied
     async fn test_unauthorized_wrong_key() {
         let server = setup_server().await.unwrap();
         //panic!("NYI");
@@ -185,6 +196,7 @@ mod tests {
     }
 
     #[tokio::test]
+    /// test if we can limit the table status
     async fn test_limit() {
         let server = setup_server().await.unwrap();
         let vec = vec![20; 500];
