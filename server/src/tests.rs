@@ -159,6 +159,18 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn get_specific_item() {
+        let server = setup_server().await.unwrap();
+        let insert1 = add_items(&server, 1, vec![10, 20, 30]).await;
+        insert1.assert_status_ok();
+        assert_eq!(insert1.json::<bool>(), true);
+
+        let get = server.get("/1/1/").add_query_param("key", API_KEY).await;
+        get.assert_status_ok();
+        assert_eq!(get.json::<Vec<MenuItem>>().first().unwrap().item_number, 20);
+    }
+
+    #[tokio::test]
     async fn test_unauthorized_no_query_param() {
         let server = setup_server().await.unwrap();
         let get = server.get("/1/").await;
