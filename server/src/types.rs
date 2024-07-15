@@ -1,10 +1,11 @@
-use std::sync::Arc;
+use std::{iter, sync::Arc};
 
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 use tokio::sync::RwLock;
+use tracing::info;
 
-static INITIAL_AMOUNT_OF_TABLES: u64 = 50;
+static AMOUNT_OF_TABLES: usize = 50;
 // we validate against this secret key. Not perfect security but better than nothing.
 static SECRET_KEY: &str =
     "QXlj0uzlyckcmhVvvRHfSKzXZZE0K/k7+dyQx2k5Le2HwTdpInoh3VtDiLEV4eJLTX3aUcG+7mVO";
@@ -40,10 +41,9 @@ pub(crate) struct Table {
 pub(crate) type AppState = Arc<Vec<RwLock<Table>>>;
 
 pub(crate) fn new_app_state() -> AppState {
-    let tables = [1..INITIAL_AMOUNT_OF_TABLES]
-        .iter()
-        .map(|i| RwLock::new(Table { items: vec![] }))
-        .collect::<Vec<RwLock<Table>>>();
-
+    let mut tables = Vec::with_capacity(AMOUNT_OF_TABLES);
+    for _ in 0..AMOUNT_OF_TABLES {
+        tables.push(RwLock::new(Table { items: vec![] }));
+    }
     Arc::new(tables)
 }

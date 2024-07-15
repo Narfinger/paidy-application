@@ -65,8 +65,12 @@ mod tests {
     #[tokio::test]
     async fn items_added_exists() -> Result<(), reqwest::Error> {
         let server = setup_server().await.unwrap();
-        add_items(&server, 1, vec![1, 2, 3]).await;
-        add_items(&server, 2, vec![4, 5, 6]).await;
+        let insert1 = add_items(&server, 1, vec![1, 2, 3]).await;
+        insert1.assert_status_ok();
+        assert_eq!(insert1.json::<bool>(), true);
+        let insert2 = add_items(&server, 2, vec![4, 5, 6]).await;
+        insert2.assert_status_ok();
+        assert_eq!(insert2.json::<bool>(), true);
         let menu_items: Vec<u64> = get_items(&server, 1)
             .await
             .iter()
@@ -79,9 +83,17 @@ mod tests {
     #[tokio::test]
     async fn deletion_works() -> Result<(), reqwest::Error> {
         let server = setup_server().await.unwrap();
-        add_items(&server, 1, vec![1, 2, 3]).await;
-        delete_item(&server, 1, 2).await;
-        add_items(&server, 2, vec![4, 5, 6]).await;
+        let insert1 = add_items(&server, 1, vec![1, 2, 3]).await;
+        insert1.assert_status_ok();
+        assert_eq!(insert1.json::<bool>(), true);
+
+        let delete1 = delete_item(&server, 1, 2).await;
+        assert_eq!(delete1.json::<bool>(), true);
+        delete1.assert_status_ok();
+
+        let insert2 = add_items(&server, 2, vec![4, 5, 6]).await;
+        insert2.assert_status_ok();
+        assert_eq!(insert2.json::<bool>(), true);
         let menu_items: Vec<u64> = get_items(&server, 1)
             .await
             .iter()
@@ -94,9 +106,17 @@ mod tests {
     #[tokio::test]
     async fn deletion_works_by_item_position() -> Result<(), reqwest::Error> {
         let server = setup_server().await.unwrap();
-        add_items(&server, 1, vec![10, 20, 30]).await;
-        delete_item(&server, 1, 2).await;
-        add_items(&server, 2, vec![4, 5, 6]).await;
+        let insert1 = add_items(&server, 1, vec![10, 20, 30]).await;
+        insert1.assert_status_ok();
+        assert_eq!(insert1.json::<bool>(), true);
+
+        let delete1 = delete_item(&server, 1, 2).await;
+        delete1.assert_status_ok();
+        assert_eq!(delete1.json::<bool>(), true);
+
+        let insert2 = add_items(&server, 2, vec![4, 5, 6]).await;
+        insert2.assert_status_ok();
+        assert_eq!(insert2.json::<bool>(), true);
         let menu_items: Vec<u64> = get_items(&server, 1)
             .await
             .iter()
@@ -109,9 +129,17 @@ mod tests {
     #[tokio::test]
     async fn deletion_does_not_disturb_other() -> Result<(), reqwest::Error> {
         let server = setup_server().await.unwrap();
-        add_items(&server, 1, vec![10, 20, 30]).await;
-        delete_item(&server, 1, 2).await;
-        add_items(&server, 2, vec![4, 5, 6]).await;
+        let insert1 = add_items(&server, 1, vec![10, 20, 30]).await;
+        insert1.assert_status_ok();
+        assert_eq!(insert1.json::<bool>(), true);
+
+        let delete1 = delete_item(&server, 1, 2).await;
+        delete1.assert_status_ok();
+        assert_eq!(delete1.json::<bool>(), true);
+
+        let insert2 = add_items(&server, 2, vec![4, 5, 6]).await;
+        insert2.assert_status_ok();
+        assert_eq!(insert2.json::<bool>(), true);
         let menu_items: Vec<u64> = get_items(&server, 2)
             .await
             .iter()
