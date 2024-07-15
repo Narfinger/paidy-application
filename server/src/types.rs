@@ -4,11 +4,11 @@ use rand::Rng;
 use serde::{Deserialize, Serialize};
 use tokio::sync::RwLock;
 
-static AMOUNT_OF_TABLES: usize = 50;
+pub(crate) static AMOUNT_OF_TABLES: usize = 50;
 // we validate against this secret key. Not perfect security but better than nothing.
 pub(crate) static API_KEY: &str = "QXlj";
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 /// an item on the menu
 pub(crate) struct MenuItem {
     /// the number of the menu, i.e., 1 for Potato Fries, 2 for Karaage, etc.

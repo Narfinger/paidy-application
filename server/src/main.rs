@@ -6,10 +6,34 @@ use axum::{
 };
 use tower_http::trace::{self, TraceLayer};
 use tracing::Level;
-use types::{new_app_state, AppState, MenuItem, QueryParam, API_KEY};
+use types::{new_app_state, AppState, MenuItem, QueryParam, AMOUNT_OF_TABLES, API_KEY};
 
 mod tests;
 mod types;
+
+/// Returns all items for all tables, if supplied the limit applies to the number of tables, not the number of menuitems
+/// We do not return tables that do not have menuitems
+async fn get_all_items(
+    Query(query): Query<QueryParam>,
+    State(state): State<AppState>,
+) -> Result<String, StatusCode> {
+    if query.key != API_KEY {
+        Err(StatusCode::UNAUTHORIZED)
+    } else {
+        let mut all_tables_vector = Vec::new();
+        for i in state
+            .iter()
+            .take(query.limit.unwrap_or(AMOUNT_OF_TABLES as u64) as usize)
+        {
+            let locked = i.read().await;
+            if locked.items.len() != 0 {
+                let s = locked.items.iter().cloned().collect::<Vec<_>>();
+                all_tables_vector.push(s);
+            }
+        }
+        serde_json::to_string(&all_tables_vector).map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)
+    }
+}
 
 /// returns the items for a given `table_id`, table_id start at zero.
 async fn get_items_for_table(
@@ -103,6 +127,7 @@ fn router() -> Router {
     let state: AppState = new_app_state();
 
     Router::new()
+        .route("/", get(get_all_items))
         .route(
             "/:table_number/",
             get(get_items_for_table).post(add_item_to_table),

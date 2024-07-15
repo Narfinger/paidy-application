@@ -210,4 +210,70 @@ mod tests {
         result.assert_status_ok();
         assert_eq!(result.json::<Vec<MenuItem>>().len(), 50);
     }
+
+    #[tokio::test]
+    /// test to get all items
+    async fn test_all_items() {
+        let server = setup_server().await.unwrap();
+        let insert1 = add_items(&server, 1, vec![10, 20, 30]).await;
+        insert1.assert_status_ok();
+        let insert2 = add_items(&server, 2, vec![12, 22, 32]).await;
+        insert2.assert_status_ok();
+        let all_items = server.get("/").add_query_param("key", API_KEY).await;
+        all_items.assert_status_ok();
+
+        let item_numbers = all_items
+            .json::<Vec<Vec<MenuItem>>>()
+            .iter()
+            .flatten()
+            .map(|mi: &MenuItem| mi.item_number)
+            .collect::<Vec<u64>>();
+
+        assert_eq!(item_numbers, vec![10, 20, 30, 12, 22, 32]);
+    }
+
+    #[tokio::test]
+    /// test if we do not returns tables without MenuItems on them
+    async fn test_all_items_with_gap() {
+        let server = setup_server().await.unwrap();
+        let insert1 = add_items(&server, 1, vec![10, 20, 30]).await;
+        insert1.assert_status_ok();
+        let insert2 = add_items(&server, 3, vec![13, 23, 33]).await;
+        insert2.assert_status_ok();
+        let all_items = server.get("/").add_query_param("key", API_KEY).await;
+        all_items.assert_status_ok();
+
+        let item_numbers = all_items
+            .json::<Vec<Vec<MenuItem>>>()
+            .iter()
+            .map(|table| table.iter().map(|mi| mi.item_number).collect())
+            .collect::<Vec<Vec<u64>>>();
+
+        assert_eq!(item_numbers, vec![vec![10, 20, 30], vec![13, 23, 33]]);
+    }
+
+    #[tokio::test]
+    /// test to get all items with a limit
+    async fn test_all_items_limit() {
+        let server = setup_server().await.unwrap();
+        let insert1 = add_items(&server, 1, vec![10, 20, 30]).await;
+        insert1.assert_status_ok();
+        let insert2 = add_items(&server, 2, vec![12, 22, 32]).await;
+        insert2.assert_status_ok();
+        let all_items = server
+            .get("/")
+            .add_query_param("key", API_KEY)
+            .add_query_param("limit", 2)
+            .await;
+        all_items.assert_status_ok();
+
+        let item_numbers = all_items
+            .json::<Vec<Vec<MenuItem>>>()
+            .iter()
+            .flatten()
+            .map(|mi: &MenuItem| mi.item_number)
+            .collect::<Vec<u64>>();
+
+        assert_eq!(item_numbers, vec![10, 20, 30]);
+    }
 }
