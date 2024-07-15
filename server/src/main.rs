@@ -107,10 +107,13 @@ fn router() -> Router {
 
     Router::new()
         .route(
-            "/:table_id/",
+            "/:table_number/",
             get(get_items_for_table).post(add_item_to_table),
         )
-        .route("/:table_id/:item_id/", delete(delete_item).get(get_item))
+        .route(
+            "/:table_number/:item_number/",
+            delete(delete_item).get(get_item),
+        )
         .with_state(state)
         .layer(
             TraceLayer::new_for_http()

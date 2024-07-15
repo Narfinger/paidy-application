@@ -7,8 +7,7 @@ use tracing::info;
 
 static AMOUNT_OF_TABLES: usize = 50;
 // we validate against this secret key. Not perfect security but better than nothing.
-pub(crate) static API_KEY: &str =
-    "QXlj0uzlyckcmhVvvRHfSKzXZZE0K/k7+dyQx2k5Le2HwTdpInoh3VtDiLEV4eJLTX3aUcG+7mVO";
+pub(crate) static API_KEY: &str = "QXlj";
 
 #[derive(Debug, Serialize, Deserialize)]
 /// an item on the menu
