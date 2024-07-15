@@ -1,15 +1,11 @@
 use axum::{
-    debug_handler,
     extract::{Path, Query, State},
     http::StatusCode,
-    routing::{delete, get, post},
+    routing::{delete, get},
     Json, Router,
 };
-use tower_http::{
-    classify::ServerErrorsFailureClass,
-    trace::{self, TraceLayer},
-};
-use tracing::{info, trace, Level};
+use tower_http::trace::{self, TraceLayer};
+use tracing::Level;
 use types::{new_app_state, AppState, MenuItem, QueryParam, API_KEY};
 
 mod tests;
@@ -74,16 +70,14 @@ async fn add_item_to_table(
 ) -> Result<Json<bool>, StatusCode> {
     if query.key != API_KEY {
         Err(StatusCode::UNAUTHORIZED)
-    } else {
-        if let Some(table) = state.get(table_number) {
-            let mut table_mut = table.write().await;
-            for i in vec_items {
-                table_mut.items.push(MenuItem::new(i));
-            }
-            Ok(Json(true))
-        } else {
-            Ok(Json(false))
+    } else if let Some(table) = state.get(table_number) {
+        let mut table_mut = table.write().await;
+        for i in vec_items {
+            table_mut.items.push(MenuItem::new(i));
         }
+        Ok(Json(true))
+    } else {
+        Ok(Json(false))
     }
 }
 
@@ -95,14 +89,12 @@ async fn delete_item(
 ) -> Result<Json<bool>, StatusCode> {
     if query.key != API_KEY {
         Err(StatusCode::UNAUTHORIZED)
+    } else if let Some(table) = state.get(table_number) {
+        let mut table_mut = table.write().await;
+        table_mut.items.remove(item_position);
+        Ok(Json(true))
     } else {
-        if let Some(table) = state.get(table_number) {
-            let mut table_mut = table.write().await;
-            table_mut.items.remove(item_position);
-            Ok(Json(true))
-        } else {
-            Ok(Json(false))
-        }
+        Ok(Json(false))
     }
 }
 

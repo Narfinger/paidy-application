@@ -1,18 +1,11 @@
 #[cfg(test)]
 mod tests {
-    use std::{net::SocketAddr, sync::Arc};
-
-    use super::*;
     use crate::{
         router,
-        types::{AppState, MenuItem, API_KEY},
+        types::{MenuItem, API_KEY},
     };
-    use axum::http::{self, Request, Response, StatusCode};
     use axum_test::{TestResponse, TestServer};
-    use http_body_util::BodyExt;
-    use reqwest::Body;
-    use serde_json::{json, Value};
-    use tokio::net::TcpListener;
+    use reqwest::StatusCode;
 
     /// helper function that does a request to the serviceworker to insert `items`` into `table`
     async fn add_items(server: &TestServer, table: usize, items: Vec<usize>) -> TestResponse {

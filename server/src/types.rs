@@ -1,9 +1,8 @@
-use std::{iter, sync::Arc};
+use std::sync::Arc;
 
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 use tokio::sync::RwLock;
-use tracing::info;
 
 static AMOUNT_OF_TABLES: usize = 50;
 // we validate against this secret key. Not perfect security but better than nothing.
