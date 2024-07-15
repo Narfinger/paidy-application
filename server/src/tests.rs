@@ -174,31 +174,27 @@ mod tests {
     async fn test_unauthorized_no_query_param() {
         let server = setup_server().await.unwrap();
         let get = server.get("/1/").await;
-        panic!("NYI");
-        /*
+
         assert_eq!(get.status_code(), StatusCode::BAD_REQUEST);
         let insert = server.post("/1/").json(&vec![1, 2, 3]).await;
         assert_eq!(insert.status_code(), StatusCode::BAD_REQUEST);
-        let delete = server.post("/1/1/").await;
+        let delete = server.delete("/1/1/").await;
         assert_eq!(delete.status_code(), StatusCode::BAD_REQUEST);
-        */
     }
 
     #[tokio::test]
     async fn test_unauthorized_wrong_key() {
         let server = setup_server().await.unwrap();
-        panic!("NYI");
-        /*
-            let get = server.get("/1/").add_query_param("key", "foo").await;
-            assert_eq!(get.status_code(), StatusCode::UNAUTHORIZED);
-            let insert = server
+        //panic!("NYI");
+        let get = server.get("/1/").add_query_param("key", "foo").await;
+        assert_eq!(get.status_code(), StatusCode::UNAUTHORIZED);
+        let insert = server
             .post("/1/")
             .add_query_param("key", "foo")
             .json(&vec![1, 2, 3])
             .await;
         insert.assert_status_unauthorized();
-        let delete = server.post("/1/1/").add_query_param("key", "foo").await;
+        let delete = server.delete("/1/1/").add_query_param("key", "foo").await;
         assert_eq!(delete.status_code(), StatusCode::UNAUTHORIZED);
-        */
     }
 }
