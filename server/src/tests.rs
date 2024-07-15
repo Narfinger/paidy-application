@@ -5,7 +5,6 @@ mod tests {
         types::{MenuItem, API_KEY},
     };
     use axum_test::{TestResponse, TestServer};
-    use reqwest::StatusCode;
 
     /// helper function that does a request to the serviceworker to insert `items`` into `table`
     async fn add_items(server: &TestServer, table: usize, items: Vec<usize>) -> TestResponse {
@@ -45,7 +44,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn simple_delete_test() -> Result<(), reqwest::Error> {
+    async fn simple_delete_test() {
         let server = setup_server().await.unwrap();
 
         let insert_response = add_items(&server, 1, vec![1, 2, 3, 4]).await;
@@ -53,8 +52,6 @@ mod tests {
 
         let delete_response = delete_item(&server, 1, 1).await;
         delete_response.assert_status_ok();
-
-        Ok(())
     }
 
     #[tokio::test]
@@ -65,7 +62,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn items_added_exists() -> Result<(), reqwest::Error> {
+    async fn items_added_exists() {
         let server = setup_server().await.unwrap();
         let insert1 = add_items(&server, 1, vec![1, 2, 3]).await;
         insert1.assert_status_ok();
@@ -79,11 +76,10 @@ mod tests {
             .map(|i| i.item_number)
             .collect();
         assert_eq!(menu_items, vec![1, 2, 3]);
-        Ok(())
     }
 
     #[tokio::test]
-    async fn deletion_works() -> Result<(), reqwest::Error> {
+    async fn deletion_works() {
         let server = setup_server().await.unwrap();
         let insert1 = add_items(&server, 1, vec![1, 2, 3]).await;
         insert1.assert_status_ok();
@@ -102,11 +98,10 @@ mod tests {
             .map(|i| i.item_number)
             .collect();
         assert_eq!(menu_items, vec![1, 2]);
-        Ok(())
     }
 
     #[tokio::test]
-    async fn deletion_works_by_item_position() -> Result<(), reqwest::Error> {
+    async fn deletion_works_by_item_position() {
         let server = setup_server().await.unwrap();
         let insert1 = add_items(&server, 1, vec![10, 20, 30]).await;
         insert1.assert_status_ok();
@@ -125,11 +120,10 @@ mod tests {
             .map(|i| i.item_number)
             .collect();
         assert_eq!(menu_items, vec![10, 20]);
-        Ok(())
     }
 
     #[tokio::test]
-    async fn deletion_does_not_disturb_other() -> Result<(), reqwest::Error> {
+    async fn deletion_does_not_disturb_other() {
         let server = setup_server().await.unwrap();
         let insert1 = add_items(&server, 1, vec![10, 20, 30]).await;
         insert1.assert_status_ok();
@@ -148,7 +142,6 @@ mod tests {
             .map(|i| i.item_number)
             .collect();
         assert_eq!(menu_items, vec![4, 5, 6]);
-        Ok(())
     }
 
     #[tokio::test]
@@ -168,11 +161,11 @@ mod tests {
         let server = setup_server().await.unwrap();
         let get = server.get("/1/").await;
 
-        assert_eq!(get.status_code(), StatusCode::BAD_REQUEST);
+        assert_eq!(get.status_code(), crate::StatusCode::BAD_REQUEST);
         let insert = server.post("/1/").json(&vec![1, 2, 3]).await;
-        assert_eq!(insert.status_code(), StatusCode::BAD_REQUEST);
+        assert_eq!(insert.status_code(), crate::StatusCode::BAD_REQUEST);
         let delete = server.delete("/1/1/").await;
-        assert_eq!(delete.status_code(), StatusCode::BAD_REQUEST);
+        assert_eq!(delete.status_code(), crate::StatusCode::BAD_REQUEST);
     }
 
     #[tokio::test]
@@ -180,7 +173,7 @@ mod tests {
         let server = setup_server().await.unwrap();
         //panic!("NYI");
         let get = server.get("/1/").add_query_param("key", "foo").await;
-        assert_eq!(get.status_code(), StatusCode::UNAUTHORIZED);
+        assert_eq!(get.status_code(), crate::StatusCode::UNAUTHORIZED);
         let insert = server
             .post("/1/")
             .add_query_param("key", "foo")
@@ -188,7 +181,7 @@ mod tests {
             .await;
         insert.assert_status_unauthorized();
         let delete = server.delete("/1/1/").add_query_param("key", "foo").await;
-        assert_eq!(delete.status_code(), StatusCode::UNAUTHORIZED);
+        assert_eq!(delete.status_code(), crate::StatusCode::UNAUTHORIZED);
     }
 
     #[tokio::test]
