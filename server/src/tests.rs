@@ -197,4 +197,19 @@ mod tests {
         let delete = server.delete("/1/1/").add_query_param("key", "foo").await;
         assert_eq!(delete.status_code(), StatusCode::UNAUTHORIZED);
     }
+
+    #[tokio::test]
+    async fn test_limit() {
+        let server = setup_server().await.unwrap();
+        let vec = vec![20; 500];
+        let insert = add_items(&server, 1, vec).await;
+        insert.assert_status_ok();
+        let result = server
+            .get("/1/")
+            .add_query_param("key", API_KEY)
+            .add_query_param("limit", "50")
+            .await;
+        result.assert_status_ok();
+        assert_eq!(result.json::<Vec<MenuItem>>().len(), 50);
+    }
 }
