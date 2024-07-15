@@ -5,7 +5,7 @@ mod tests {
     use super::*;
     use crate::{
         router,
-        types::{AppState, MenuItem},
+        types::{AppState, MenuItem, API_KEY},
     };
     use axum::http::{self, Request, Response, StatusCode};
     use axum_test::{TestResponse, TestServer};
@@ -16,19 +16,28 @@ mod tests {
 
     /// helper function that does a request to the serviceworker to insert `items`` into `table`
     async fn add_items(server: &TestServer, table: usize, items: Vec<usize>) -> TestResponse {
-        server.post(&format!("/{}/", table)).json(&items).await
+        server
+            .post(&format!("/{}/", table))
+            .add_query_param("key", API_KEY)
+            .json(&items)
+            .await
     }
 
     /// helper function that does a delete request for `table` on `item_position`
     async fn delete_item(server: &TestServer, table: usize, item_position: usize) -> TestResponse {
         server
             .delete(&format!("/{}/{}/", table, item_position))
+            .add_query_param("key", API_KEY)
             .await
     }
 
     /// helper function that does a request to the serviceworker to query items and returns it
     async fn get_items(server: &TestServer, table: usize) -> Vec<MenuItem> {
-        server.get(&format!("/{}/", table)).await.json()
+        server
+            .get(&format!("/{}/", table))
+            .add_query_param("key", API_KEY)
+            .await
+            .json()
     }
 
     async fn setup_server() -> Result<TestServer, anyhow::Error> {
@@ -38,7 +47,7 @@ mod tests {
     #[tokio::test]
     async fn simple_insert_test() {
         let server = setup_server().await.unwrap();
-        let response = server.get("/1/").await;
+        let response = server.get("/1/").add_query_param("key", API_KEY).await;
         response.assert_status_ok();
     }
 
@@ -147,5 +156,37 @@ mod tests {
             .collect();
         assert_eq!(menu_items, vec![4, 5, 6]);
         Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_unauthorized_no_query_param() {
+        let server = setup_server().await.unwrap();
+        let get = server.get("/1/").await;
+        panic!("NYI");
+        /*
+        assert_eq!(get.status_code(), StatusCode::BAD_REQUEST);
+        let insert = server.post("/1/").json(&vec![1, 2, 3]).await;
+        assert_eq!(insert.status_code(), StatusCode::BAD_REQUEST);
+        let delete = server.post("/1/1/").await;
+        assert_eq!(delete.status_code(), StatusCode::BAD_REQUEST);
+        */
+    }
+
+    #[tokio::test]
+    async fn test_unauthorized_wrong_key() {
+        let server = setup_server().await.unwrap();
+        panic!("NYI");
+        /*
+            let get = server.get("/1/").add_query_param("key", "foo").await;
+            assert_eq!(get.status_code(), StatusCode::UNAUTHORIZED);
+            let insert = server
+            .post("/1/")
+            .add_query_param("key", "foo")
+            .json(&vec![1, 2, 3])
+            .await;
+        insert.assert_status_unauthorized();
+        let delete = server.post("/1/1/").add_query_param("key", "foo").await;
+        assert_eq!(delete.status_code(), StatusCode::UNAUTHORIZED);
+        */
     }
 }

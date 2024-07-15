@@ -7,7 +7,7 @@ use tracing::info;
 
 static AMOUNT_OF_TABLES: usize = 50;
 // we validate against this secret key. Not perfect security but better than nothing.
-static SECRET_KEY: &str =
+pub(crate) static API_KEY: &str =
     "QXlj0uzlyckcmhVvvRHfSKzXZZE0K/k7+dyQx2k5Le2HwTdpInoh3VtDiLEV4eJLTX3aUcG+7mVO";
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -34,6 +34,15 @@ impl MenuItem {
 /// A table in the restaurant having various menuitems
 pub(crate) struct Table {
     pub(crate) items: Vec<MenuItem>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+/// the query parameter, having the API_key and a optional limit
+pub(crate) struct QueryParam {
+    /// API Key we will check
+    pub(crate) key: String,
+    /// The limit if we want
+    pub(crate) limit: Option<u64>,
 }
 
 /// The whole state of the app is a vector of tables.
