@@ -5,6 +5,7 @@ use axum::{
     routing::{delete, get, post},
     Json, Router,
 };
+use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 use types::{new_app_state, AppState, MenuItem};
 
 mod tests;
@@ -47,8 +48,7 @@ async fn add_item_to_table(
 
 /// deletes an item from a given `table_id` and a given `item_position``. Returns if we successfully deleted the item.
 async fn delete_item(
-    Path(table_id): Path<usize>,
-    Path(item_position): Path<usize>,
+    Path((table_id, item_position)): Path<(usize, usize)>,
     State(state): State<AppState>,
 ) -> Result<Json<bool>, StatusCode> {
     if let Some(table) = state.get(table_id) {
@@ -74,6 +74,9 @@ fn router() -> Router {
 #[tokio::main]
 async fn main() {
     let app = router();
+    tracing_subscriber::fmt()
+        .with_max_level(tracing::Level::INFO)
+        .init();
     println!("Listening on port 127.0.0.1:3000");
     let listener = tokio::net::TcpListener::bind("127.0.0.1:3000")
         .await
