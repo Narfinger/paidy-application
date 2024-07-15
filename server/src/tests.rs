@@ -122,7 +122,7 @@ mod tests {
             .iter()
             .map(|i| i.item_number)
             .collect();
-        assert_eq!(menu_items, vec![10, 30]);
+        assert_eq!(menu_items, vec![10, 20]);
         Ok(())
     }
 

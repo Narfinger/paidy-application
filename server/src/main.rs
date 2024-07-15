@@ -39,7 +39,6 @@ async fn add_item_to_table(
     Json(vec_items): Json<Vec<u64>>,
 ) -> Result<Json<bool>, StatusCode> {
     if let Some(table) = state.get(table_id) {
-        info!("doing");
         let mut table_mut = table.write().await;
         for i in vec_items {
             table_mut.items.push(MenuItem::new(i));
