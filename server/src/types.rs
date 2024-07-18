@@ -30,10 +30,15 @@ impl MenuItem {
     }
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 /// A table in the restaurant having various menuitems
 pub(crate) struct Table {
+    pub(crate) table_number: usize,
     pub(crate) items: Vec<MenuItem>,
+}
+
+pub(crate) async fn is_table_empty(table: &RwLock<Table>) -> bool {
+    table.read().await.items.is_empty()
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -52,8 +57,11 @@ pub(crate) type AppState = Arc<Vec<RwLock<Table>>>;
 /// Create a new AppState, filling the table vector with RwLocks
 pub(crate) fn new_app_state() -> AppState {
     let mut tables = Vec::with_capacity(AMOUNT_OF_TABLES);
-    for _ in 0..AMOUNT_OF_TABLES {
-        tables.push(RwLock::new(Table { items: vec![] }));
+    for i in 0..AMOUNT_OF_TABLES {
+        tables.push(RwLock::new(Table {
+            table_number: i,
+            items: vec![],
+        }));
     }
     Arc::new(tables)
 }

@@ -6,7 +6,9 @@ use axum::{
 };
 use tower_http::trace::{self, TraceLayer};
 use tracing::Level;
-use types::{new_app_state, AppState, MenuItem, QueryParam, AMOUNT_OF_TABLES, API_KEY};
+use types::{
+    is_table_empty, new_app_state, AppState, MenuItem, QueryParam, Table, AMOUNT_OF_TABLES, API_KEY,
+};
 
 mod tests;
 mod types;
@@ -16,22 +18,21 @@ mod types;
 async fn get_all_items(
     Query(query): Query<QueryParam>,
     State(state): State<AppState>,
-) -> Result<String, StatusCode> {
+) -> Result<Json<Vec<Table>>, StatusCode> {
     if query.key != API_KEY {
         Err(StatusCode::UNAUTHORIZED)
     } else {
-        let mut all_tables_vector = Vec::new();
-        for i in state
+        let mut non_empty_tables = vec![];
+        // filter does not work in async yet
+        for t in state
             .iter()
             .take(query.limit.unwrap_or(AMOUNT_OF_TABLES as u64) as usize)
         {
-            let locked = i.read().await;
-            if !locked.items.is_empty() {
-                let s = locked.items.to_vec();
-                all_tables_vector.push(s);
+            if !is_table_empty(t).await {
+                non_empty_tables.push(t.read().await.to_owned());
             }
         }
-        serde_json::to_string(&all_tables_vector).map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)
+        Ok(Json(non_empty_tables))
     }
 }
 
@@ -40,7 +41,7 @@ async fn get_items_for_table(
     Path(table_number): Path<usize>,
     Query(query): Query<QueryParam>,
     State(state): State<AppState>,
-) -> Result<String, StatusCode> {
+) -> Result<Json<Vec<MenuItem>>, StatusCode> {
     if query.key != API_KEY {
         Err(StatusCode::UNAUTHORIZED)
     } else if let Some(table_lock) = state.get(table_number).map(|table| table.read()) {
@@ -49,9 +50,10 @@ async fn get_items_for_table(
         let new_items = table_lock
             .items
             .iter()
+            .cloned()
             .take(limit as usize)
-            .collect::<Vec<&MenuItem>>();
-        serde_json::to_string(&new_items).map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)
+            .collect::<Vec<MenuItem>>();
+        Ok(Json(new_items))
     } else {
         Err(StatusCode::NOT_FOUND)
     }
@@ -62,22 +64,20 @@ async fn get_item(
     Path((table_number, item_number)): Path<(usize, usize)>,
     Query(query): Query<QueryParam>,
     State(state): State<AppState>,
-) -> Result<String, StatusCode> {
+) -> Result<Json<Vec<MenuItem>>, StatusCode> {
     if query.key != API_KEY {
         Err(StatusCode::UNAUTHORIZED)
     } else {
-        let json_string = if let Some(table_lock) = state.get(table_number) {
+        if let Some(table_lock) = state.get(table_number) {
             let table_items = &table_lock.read().await.items;
             if let Some(item) = table_items.get(item_number) {
-                serde_json::to_string::<Vec<&MenuItem>>(&vec![item])
+                Ok(Json(vec![item.clone()]))
             } else {
-                serde_json::to_string::<Vec<MenuItem>>(&vec![])
+                Ok(Json(vec![]))
             }
         } else {
-            serde_json::to_string::<Vec<MenuItem>>(&vec![])
+            Ok(Json(vec![]))
         }
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-        Ok(json_string)
     }
 }
 

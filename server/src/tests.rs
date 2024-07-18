@@ -2,7 +2,7 @@
 mod tests {
     use crate::{
         router,
-        types::{MenuItem, API_KEY},
+        types::{MenuItem, Table, API_KEY},
     };
     use axum_test::{TestResponse, TestServer};
 
@@ -285,13 +285,26 @@ mod tests {
         all_items.assert_status_ok();
 
         let item_numbers = all_items
-            .json::<Vec<Vec<MenuItem>>>()
+            .json::<Vec<Table>>()
             .iter()
+            .map(|t: &Table| {
+                t.items
+                    .iter()
+                    .map(|mi| mi.item_number)
+                    .collect::<Vec<u64>>()
+            })
             .flatten()
-            .map(|mi: &MenuItem| mi.item_number)
             .collect::<Vec<u64>>();
 
         assert_eq!(item_numbers, vec![10, 20, 30, 12, 22, 32]);
+    }
+
+    #[tokio::test]
+    /// test to get all items when every table is empty
+    async fn all_items_for_empty() {
+        let server = setup_server().await.unwrap();
+        let all_items = server.get("/").add_query_param("key", API_KEY).await;
+        all_items.assert_status_ok();
     }
 
     #[tokio::test]
@@ -306,9 +319,9 @@ mod tests {
         all_items.assert_status_ok();
 
         let item_numbers = all_items
-            .json::<Vec<Vec<MenuItem>>>()
+            .json::<Vec<Table>>()
             .iter()
-            .map(|table| table.iter().map(|mi| mi.item_number).collect())
+            .map(|table| table.items.iter().map(|mi| mi.item_number).collect())
             .collect::<Vec<Vec<u64>>>();
 
         assert_eq!(item_numbers, vec![vec![10, 20, 30], vec![13, 23, 33]]);
@@ -330,12 +343,16 @@ mod tests {
         all_items.assert_status_ok();
 
         let item_numbers = all_items
-            .json::<Vec<Vec<MenuItem>>>()
+            .json::<Vec<Table>>()
             .iter()
+            .map(|t: &Table| {
+                t.items
+                    .iter()
+                    .map(|mi| mi.item_number)
+                    .collect::<Vec<u64>>()
+            })
             .flatten()
-            .map(|mi: &MenuItem| mi.item_number)
             .collect::<Vec<u64>>();
-
         assert_eq!(item_numbers, vec![10, 20, 30]);
     }
 }
