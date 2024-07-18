@@ -26,8 +26,8 @@ async fn get_all_items(
             .take(query.limit.unwrap_or(AMOUNT_OF_TABLES as u64) as usize)
         {
             let locked = i.read().await;
-            if locked.items.len() != 0 {
-                let s = locked.items.iter().cloned().collect::<Vec<_>>();
+            if !locked.items.is_empty() {
+                let s = locked.items.to_vec();
                 all_tables_vector.push(s);
             }
         }
@@ -43,19 +43,17 @@ async fn get_items_for_table(
 ) -> Result<String, StatusCode> {
     if query.key != API_KEY {
         Err(StatusCode::UNAUTHORIZED)
+    } else if let Some(table_lock) = state.get(table_number).map(|table| table.read()) {
+        let table_lock = table_lock.await;
+        let limit = query.limit.unwrap_or(table_lock.items.len() as u64);
+        let new_items = table_lock
+            .items
+            .iter()
+            .take(limit as usize)
+            .collect::<Vec<&MenuItem>>();
+        serde_json::to_string(&new_items).map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)
     } else {
-        if let Some(table_lock) = state.get(table_number).map(|table| table.read()) {
-            let table_lock = table_lock.await;
-            let limit = query.limit.unwrap_or(table_lock.items.len() as u64);
-            let new_items = table_lock
-                .items
-                .iter()
-                .take(limit as usize)
-                .collect::<Vec<&MenuItem>>();
-            serde_json::to_string(&new_items).map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)
-        } else {
-            Err(StatusCode::NOT_FOUND)
-        }
+        Err(StatusCode::NOT_FOUND)
     }
 }
 
