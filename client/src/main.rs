@@ -99,7 +99,7 @@ fn main() -> anyhow::Result<()> {
         let menu_items = reqwest::blocking::get(query_string)?.json::<Vec<MenuItem>>()?;
 
         println!("--------Showing Items for table {}----------", i);
-        for (inndex, menu_item) in menu_items.iter().enumerate() {
+        for (index, menu_item) in menu_items.iter().enumerate() {
             println!(
                 "{} | Item#: {} Time: {}",
                 index, menu_item.item_number, menu_item.duration_in_minutes
