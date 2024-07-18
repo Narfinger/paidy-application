@@ -4,8 +4,9 @@ use rand::Rng;
 use serde::{Deserialize, Serialize};
 use tokio::sync::RwLock;
 
+/// For clarity we ignore off by one here
 pub(crate) static AMOUNT_OF_TABLES: usize = 50;
-// we validate against this secret key. Not perfect security but better than nothing.
+/// we validate against this secret key. Not perfect security but better than nothing.
 pub(crate) static API_KEY: &str = "QXlj";
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
@@ -18,6 +19,7 @@ pub(crate) struct MenuItem {
 }
 
 impl MenuItem {
+    /// Create a new menuitem with a random duration
     pub(crate) fn new(item_number: u64) -> Self {
         let mut rng = rand::thread_rng();
         let val = rng.gen_range(5..16);
@@ -47,6 +49,7 @@ pub(crate) struct QueryParam {
 /// We use RwLock inside as multiple people rarely will add items to the same table
 pub(crate) type AppState = Arc<Vec<RwLock<Table>>>;
 
+/// Create a new AppState, filling the table vector with RwLocks
 pub(crate) fn new_app_state() -> AppState {
     let mut tables = Vec::with_capacity(AMOUNT_OF_TABLES);
     for _ in 0..AMOUNT_OF_TABLES {
