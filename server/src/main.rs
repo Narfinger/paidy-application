@@ -67,17 +67,15 @@ async fn get_item(
 ) -> Result<Json<Vec<MenuItem>>, StatusCode> {
     if query.key != API_KEY {
         Err(StatusCode::UNAUTHORIZED)
-    } else {
-        if let Some(table_lock) = state.get(table_number) {
-            let table_items = &table_lock.read().await.items;
-            if let Some(item) = table_items.get(item_number) {
-                Ok(Json(vec![item.clone()]))
-            } else {
-                Ok(Json(vec![]))
-            }
+    } else if let Some(table_lock) = state.get(table_number) {
+        let table_items = &table_lock.read().await.items;
+        if let Some(item) = table_items.get(item_number) {
+            Ok(Json(vec![*item]))
         } else {
             Ok(Json(vec![]))
         }
+    } else {
+        Ok(Json(vec![]))
     }
 }
 
