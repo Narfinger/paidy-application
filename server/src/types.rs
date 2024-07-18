@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use tokio::sync::RwLock;
 
 /// For clarity we ignore off by one here
-pub(crate) static AMOUNT_OF_TABLES: usize = 50;
+pub(crate) static AMOUNT_OF_TABLES: usize = 100;
 /// we validate against this secret key. Not perfect security but better than nothing.
 pub(crate) static API_KEY: &str = "QXlj";
 
