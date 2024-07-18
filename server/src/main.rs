@@ -52,11 +52,10 @@ async fn get_items_for_table(
                 .iter()
                 .take(limit as usize)
                 .collect::<Vec<&MenuItem>>();
-            serde_json::to_string(&new_items)
+            serde_json::to_string(&new_items).map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)
         } else {
-            serde_json::to_string::<Vec<u64>>(&vec![])
+            Err(StatusCode::NOT_FOUND)
         }
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)
     }
 }
 

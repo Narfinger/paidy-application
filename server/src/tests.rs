@@ -46,6 +46,15 @@ mod tests {
     }
 
     #[tokio::test]
+    /// testing if we can get simple get requests
+    async fn too_large_table() {
+        let server = setup_server().await.unwrap();
+        let response = server.get("/300/").add_query_param("key", API_KEY).await;
+
+        response.assert_status_not_found();
+    }
+
+    #[tokio::test]
     /// testing simple delete requests
     async fn simple_delete_test() {
         let server = setup_server().await.unwrap();
@@ -167,7 +176,7 @@ mod tests {
 
     #[tokio::test]
     /// test if we reject with no key parameter supplied
-    async fn test_unauthorized_no_query_param() {
+    async fn unauthorized_no_query_param() {
         let server = setup_server().await.unwrap();
         let get = server.get("/1/").await;
 
@@ -180,7 +189,7 @@ mod tests {
 
     #[tokio::test]
     /// test if we reject with the wrong key parameter supplied
-    async fn test_unauthorized_wrong_key() {
+    async fn unauthorized_wrong_key() {
         let server = setup_server().await.unwrap();
         //panic!("NYI");
         let get = server.get("/1/").add_query_param("key", "foo").await;
@@ -197,7 +206,7 @@ mod tests {
 
     #[tokio::test]
     /// test if we can limit the table status
-    async fn test_limit() {
+    async fn limit() {
         let server = setup_server().await.unwrap();
         let vec = vec![20; 500];
         let insert = add_items(&server, 1, vec).await;
@@ -212,8 +221,61 @@ mod tests {
     }
 
     #[tokio::test]
+    /// test if we can limit is too large
+    async fn limit_to_large() {
+        let server = setup_server().await.unwrap();
+        let vec = vec![1, 2, 3, 4];
+        let insert = add_items(&server, 1, vec).await;
+        insert.assert_status_ok();
+        let result = server
+            .get("/1/")
+            .add_query_param("key", API_KEY)
+            .add_query_param("limit", "600")
+            .await;
+        result.assert_status_ok();
+        assert_eq!(
+            result
+                .json::<Vec<MenuItem>>()
+                .iter()
+                .map(|m| m.item_number)
+                .collect::<Vec<u64>>(),
+            vec![1, 2, 3, 4]
+        );
+    }
+
+    #[tokio::test]
+    /// test if we can limit is zero
+    async fn limit_is_zero() {
+        let server = setup_server().await.unwrap();
+        let vec = vec![20; 500];
+        let insert = add_items(&server, 1, vec).await;
+        insert.assert_status_ok();
+        let result = server
+            .get("/1/")
+            .add_query_param("key", API_KEY)
+            .add_query_param("limit", "0")
+            .await;
+        result.assert_status_ok();
+    }
+
+    #[tokio::test]
+    /// test if limit is negative
+    async fn limit_is_negative() {
+        let server = setup_server().await.unwrap();
+        let vec = vec![20; 500];
+        let insert = add_items(&server, 1, vec).await;
+        insert.assert_status_ok();
+        let result = server
+            .get("/1/")
+            .add_query_param("key", API_KEY)
+            .add_query_param("limit", "-1")
+            .await;
+        result.assert_status_bad_request();
+    }
+
+    #[tokio::test]
     /// test to get all items
-    async fn test_all_items() {
+    async fn all_items() {
         let server = setup_server().await.unwrap();
         let insert1 = add_items(&server, 1, vec![10, 20, 30]).await;
         insert1.assert_status_ok();
@@ -234,7 +296,7 @@ mod tests {
 
     #[tokio::test]
     /// test if we do not returns tables without MenuItems on them
-    async fn test_all_items_with_gap() {
+    async fn all_items_with_gap() {
         let server = setup_server().await.unwrap();
         let insert1 = add_items(&server, 1, vec![10, 20, 30]).await;
         insert1.assert_status_ok();
@@ -254,7 +316,7 @@ mod tests {
 
     #[tokio::test]
     /// test to get all items with a limit
-    async fn test_all_items_limit() {
+    async fn all_items_limit() {
         let server = setup_server().await.unwrap();
         let insert1 = add_items(&server, 1, vec![10, 20, 30]).await;
         insert1.assert_status_ok();
