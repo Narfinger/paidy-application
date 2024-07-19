@@ -27,12 +27,12 @@ struct Args {
     #[clap(short, long)]
     limit: Option<usize>,
 
-    #[clap(short, long, value_parser, num_args = 2..,value_delimiter = ' ', group="input")]
+    #[clap(short, long, value_parser, num_args = 2..,value_delimiter = ' ', group="input", value_names = ["table_number", "menu_item", "menu_item"])]
     /// add menu items to a table, given as `table_number menu_item1 menu_item2...`
     add: Option<Vec<usize>>,
 
     /// delete a menu item given as `table_number menu_item1 menu_item2...`
-    #[clap(short, long, value_parser, num_args = 2..,value_delimiter = ' ', group="input")]
+    #[clap(short, long, value_parser, num_args = 2..,value_delimiter = ' ', group="input", value_names = ["table_number", "menu_item", "menu_item"])]
     delete: Option<Vec<usize>>,
 
     /// get all menuitems
