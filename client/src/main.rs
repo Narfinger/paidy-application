@@ -40,8 +40,12 @@ struct Args {
     all: bool,
 
     /// get the current menu items for a table
-    #[clap(short, long, group = "input")]
-    get: Option<usize>,
+    #[clap(short = 't', long, group = "input", value_name = "table_number")]
+    get_table: Option<usize>,
+
+    /// get specific one
+    #[clap(short = 'i', long, num_args = 2, group = "input", value_names = ["table_number", "menu_item"])]
+    get_item: Option<Vec<usize>>,
 }
 fn main() -> anyhow::Result<()> {
     let args = Args::parse();
@@ -90,7 +94,7 @@ fn main() -> anyhow::Result<()> {
             }
         }
     // get
-    } else if let Some(i) = args.get {
+    } else if let Some(i) = args.get_table {
         let query_string = if let Some(l) = args.limit {
             format!("http://127.0.0.1:3000/{}/?key={}&limit={}", i, API_KEY, l)
         } else {
@@ -103,6 +107,22 @@ fn main() -> anyhow::Result<()> {
             println!(
                 "{} | Item#: {} Time: {}",
                 index, menu_item.item_number, menu_item.duration_in_minutes
+            );
+        }
+    } else if let Some(mut i) = args.get_item {
+        let menu_item = i.split_off(1);
+        let menu_item_number = menu_item.first().unwrap();
+        let table = i.first().unwrap();
+
+        let items = reqwest::blocking::get(format!(
+            "http://127.0.0.1:3000/{}/{}/?key={}",
+            table, menu_item_number, API_KEY,
+        ))?
+        .json::<Vec<MenuItem>>()?;
+        if let Some(item) = items.first() {
+            println!(
+                "| Item#: {} Time: {}",
+                item.item_number, item.duration_in_minutes
             );
         }
     }
